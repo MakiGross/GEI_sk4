@@ -1,27 +1,34 @@
 clc, clear variables, format longG, close all;
 %% JPEG komprese a dekomprese rastru
 % loads images
-img = imread("Image1.bmp");
+img = imread("vzor1.jpg");
 img = double(img);
 
 q = 25; % compression factor %
 
+[m, n, ~] = size(img);
+m_pad = ceil(m / 8) * 8;  % Next multiple of 8 for rows
+n_pad = ceil(n / 8) * 8;  % Next multiple of 8 for columns
+
+% Pad the image to match the new dimensions
+img_pad = padarray(img, [m_pad - m, n_pad - n], 'replicate', 'post');
+
 %% COMPRESSION
 
 % get RGB components
-R = img(:,:,1);
-G = img(:,:,2);
-B = img(:,:,3);
+R = img_pad(:,:,1);
+G = img_pad(:,:,2);
+B = img_pad(:,:,3);
 
 % conversion RGB to YCBCR
-Y = 0.2990*R + 0.5870*G +0.1140*B;
-Cb = -0.1687*R + 0.3313*G + 0.5*B +128;
-Cr = 0.5*R - 0.4187*G - 0.0813*B +128;
+Y =   0.2990 * R + 0.5870*G + 0.1140 * B;
+Cb = -0.1687 * R - 0.3313*G + 0.5    * B + 128;
+Cr =  0.5    * R - 0.4187*G - 0.0813  *B + 128;
 
 % interval transformation - roztáhnutí intervalu pro menší změny
-%Y_1 = 2* Y1 -255;
-%Cb_1 = 2* Cb1 - 255;
-%Cr_1 = 2*Cr1 - 255;
+% Y = 2* Y -255;
+% Cb = 2* Cb - 255;
+% Cr = 2*Cr - 255;
 
 % resampling - ze zájmu
 
@@ -50,8 +57,7 @@ Qc = [17 18 24 47 66 99 99 99
 Q_y = (50*Qy)/q;
 Q_c = (50*Qc)/q;
 
-
-[m,n] = size(Y);  % initialize compressed matrices
+%[m,n] = size(Y);  % initialize compressed matrices
 
 % process matrix by submatrices
 for i = 1:8:m-7
@@ -62,16 +68,16 @@ for i = 1:8:m-7
         Crsub = Cr(i:i+7, j:j+7);
 
         % apply myDCT
-        Ydct(i:i+7, j:j+7) = myDCT(Ysub);
-        Cbdct(i:i+7, j:j+7) = myDCT(Cbsub);
-        Crdct(i:i+7, j:j+7) = myDCT(Crsub);
+        Ydct = myDCT(Ysub);
+        Cbdct = myDCT(Cbsub);
+        Crdct = myDCT(Crsub);
 
         % quantisation
-        Yq(i:i+7, j:j+7) = double(Ydct)./Q_c;
-        Cbq(i:i+7, j:j+7) = double(Cbdct)./Q_y;
-        Crq(i:i+7, j:j+7) = double(Crdct)./Q_y;
+        Yq = Ydct./Q_c;
+        Cbq = Cbdct./Q_y;
+        Crq = Crdct./Q_y;
 
-        % round
+        % round and overwrite
         Yr(i:i+7, j:j+7) = round(Yq);
         Cbr(i:i+7, j:j+7) = round(Cbq);
         Crr(i:i+7, j:j+7) = round(Crq);
@@ -84,15 +90,27 @@ end
 % Dequantization and iDCT
 for i = 1:8:m-7
     for j = 1:8:n-7
+
+        % create submatrices
+        Ysub = Yr(i:i+7,j:j+7);
+        Cbsub= Cbr(i:i+7,j:j+7);
+        CRsub= Crr(i:i+7,j:j+7);
+
         % dequantize
-        Ydeq = Yq(i:i+7, j:j+7) .* Q_y;
-        Cbdeq = Cbq(i:i+7, j:j+7) .* Q_c;
-        Crdeq = Crq(i:i+7, j:j+7) .* Q_c;
+        Ydeq = Yq   .* Q_y;
+        Cbdeq = Cbq .* Q_c;
+        Crdeq = Crq .* Q_c;
 
         % apply iDCT
-        YiDCT(i:i+7, j:j+7) = myiDCT(Ydeq);
-        CbiDCT(i:i+7, j:j+7) = myiDCT(Cbdeq);
-        CriDCT(i:i+7, j:j+7) = myiDCT(Crdeq);
+        YiDCT = myiDCT(Ydeq);
+        CbiDCT = myiDCT(Cbdeq);
+        CriDCT = myiDCT(Crdeq);
+
+        % overwrite
+        Y(i:i+7,j:j+7) = YiDCT;
+        CB(i:i+7,j:j+7) = CbiDCT;
+        CR(i:i+7,j:j+7) = CriDCT;    
+    
     end
 end
 
