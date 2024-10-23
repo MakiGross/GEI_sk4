@@ -1,10 +1,10 @@
-clc; clear all; format long g;
+clc; format long g;
 
 %Load image
 ras1 = imread("Image2.bmp");
-imshow(ras1);
+%imshow(ras1);
 
-q=100
+q=50;
 
 %get RGB components
 R=double(ras1(:,:,1));
@@ -48,7 +48,7 @@ Qc = (50*Qc)/q;
 [m,n] = size(Y);
 
 for i =1:8:m-7
-    for j = 1:8:m-7
+    for j = 1:8:n-7
 
         %create tiles submatrices
         Ys = Y(i:i+7,j:j+7);
@@ -62,9 +62,9 @@ for i =1:8:m-7
         
         %Quantization
 
-        Yq = Ydct./Qc;
-        CBq = CBdct./Qc;
-        CRq = CRdct./Qc;
+        Yq = Ydct.*Qc;
+        CBq = CBdct.*Qy;
+        CRq = CRdct.*Qy;
         
         %Round values
         Yqr = round(Yq);
@@ -85,7 +85,7 @@ end
 %JPEG decompression
 
 for i =1:8:m-7
-    for j = 1:8:m-7
+    for j = 1:8:n-7
 
         %create tiles (submatrices)
         Ys = YT(i:i+7,j:j+7);
@@ -94,8 +94,8 @@ for i =1:8:m-7
         
         %Dequantization
         Ysd = Ys./Qc;
-        CBd = CBs./Qc;
-        CRd = CRs./Qc;
+        CBd = CBs./Qy;
+        CRd = CRs./Qy;
         
         %Apply IDCT
         Yidct = myidct(Ysd);
@@ -105,16 +105,16 @@ for i =1:8:m-7
 
         %Overwrite tile with the compressed one
         Y(i:i+7,j:j+7) = Yidct;
-        CB(i:i+7,j:j+7) = CBidct;
-        CR(i:i+7,j:j+7) = CRidct;
+        Cb(i:i+7,j:j+7) = CBidct;
+        Cr(i:i+7,j:j+7) = CRidct;
     end
 end
 
 %YCBCR to RGB
 
-Rd = Y+1.4020*(CR-128);
-Gd = Y-0.3441*(CB-128)-0.7141*(CR-128);
-Bd = Y+1.7720*(CB-128)-0.0001*(CR-128);
+Rd = Y+1.4020*(Cr-128);
+Gd = Y-0.3441*(Cb-128)-0.7141*(Cr-128);
+Bd = Y+1.7720*(Cb-128)-0.0001*(Cr-128);
 
 %convert double to uint8
 
@@ -127,7 +127,11 @@ ras2(:,:,1)=Ri;
 ras2(:,:,2)=Gi;
 ras2(:,:,3)=Bi;
 
-imshow(ras2);
+%imshow(ras2);
+% display of resoults
+figure;
+subplot(1, 2, 1), imshow(uint8(ras1)), title('Original Image');
+subplot(1, 2, 2), imshow(ras2), title('Decompressed Image');
 
 %Compute standarts deviations
 dR = R-Rd;
@@ -149,35 +153,38 @@ function Rt = mydct(R)
 Rt = R;
 
 %process input raster
-for u = 0:7;
+for u = 0:7
     %Cu
-    if u ==0;
+    if u ==0
         Cu = sqrt(2)/2;
     else
         Cu =1;
     end
-    
+
     %output raster: columns
 
- for v = 0:7
+    for v = 0:7
     %Cu
-    if v == 0 
+     if v == 0 
         Cv = sqrt(2)/2;
-    else
+     else
         Cv =1;
-    end
+     end
 
     %input raster: rows
     F = 0;
     for x = 0:7
         %input raster: columns
         for y = 0:7
-            F=F+1/4*Cu*Cv*(R(x+1,y+1)*cos((2*x+1)*u*pi)/16)*cos((2*y+1)*v*pi/16);
+            F=F+1/4*Cu*Cv*(R(x+1, y+1)*cos((2*x+1)*u*pi/16)*cos((2*y+1)*v*pi/16));
+            %F=F+1/4*Cu*Cv*(R(x+1,y+1)*cos((2*x+1)*u*pi/16)*cos((2*y+1)*v*pi/16));
+
         end
+
     end
     %Output raster
     Rt(u+1,v+1)=F;
-  end
+   end
 end
 
 end
@@ -195,7 +202,7 @@ for x = 0:7
     %output raster: columns
 
  for y = 0:7
-    
+
 
     %input raster: rows
     F = 0;
@@ -214,15 +221,16 @@ for x = 0:7
         else
         Cv =1;
         end
-            F=F+1/4*Cu*Cv*(R(x+1,y+1)*cos((2*x+1)*u*pi)/16)*cos((2*y+1)*v*pi/16);
+         F=F+1/4*Cu*Cv*(R(u+1, v+1)*cos((2*x+1)*u*pi/16)*cos((2*y+1)*v*pi/16));
+
+        %F=F+1/4*Cu*Cv*(R(x+1,v+1)*cos((2*x+1)*u*pi/16)*cos((2*y+1)*v*pi/16));
+
+
         end
     end
     %Output raster
-    Rt(u+1,v+1)=F;
+    Rt(x+1,y+1)=F;
   end
 end
 
 end
-
-
-
