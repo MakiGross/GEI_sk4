@@ -1,21 +1,24 @@
-clc; format long g;
+
+clc; format long g; close all; clear variables;
 
 %Load image
-ras1 = imread("Image2.bmp");
+ras1 = imread("Image1.bmp");
 %imshow(ras1);
 
-q=50;
+q=10;  % testing 10, 50, 70
 
+%% COMPRESSION
 %get RGB components
 R=double(ras1(:,:,1));
 G=double(ras1(:,:,2));
 B=double(ras1(:,:,3));
 
-%trasnformation RGB to YCC
+%transformation RGB to YCC
 
 Y=0.2990 * R + 0.5870 *  G + 0.1140 * B;
 CB = -0.1687*R -0.3313 * G + 0.5000 *B +128;
 CR = 0.5 * R -0.4187 * G - 0.0813*B +128;
+
 
 %quantization matrix
 
@@ -75,14 +78,12 @@ for i =1:8:m-7
 
         YT(i:i+7,j:j+7) = Yqr;
         CBT(i:i+7,j:j+7) = CBqr;
-        CRT(i:i+7,j:j+7) = CRqr;
-
-        
+        CRT(i:i+7,j:j+7) = CRqr;      
 
     end
 end
 
-%JPEG decompression
+%% DECOMPRESSION
 
 for i =1:8:m-7
     for j = 1:8:n-7
@@ -127,6 +128,7 @@ ras2(:,:,1)=Ri;
 ras2(:,:,2)=Gi;
 ras2(:,:,3)=Bi;
 
+%% GRAPHICS
 %imshow(ras2);
 % display of resoults
 figure;
@@ -145,9 +147,6 @@ dB2 = dB.^2;
 sigR=sqrt(sum(sum(dR2))/(m*n));
 sigG=sqrt(sum(sum(dG2))/(m*n));
 sigB=sqrt(sum(sum(dB2))/(m*n));
-
-
-
 
 function Rt = mydct(R)
 Rt = R;
@@ -189,11 +188,14 @@ end
 
 end
 
+%% OUTCOME PRINT
+% imprint(ras2)
 
+sigR
+sigG
+sigB
 
-
-
-
+%% FUNCTIONS
 function Rt = myidct(R)
 Rt = R;
 
