@@ -1,3 +1,7 @@
+from math import *;
+from queue import *;
+
+## Kruskal
 #Graph definition
 V = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
@@ -48,3 +52,51 @@ C = {
     8 : [333, 225],
     9 : [412, 196]
 }
+
+
+# function find parent
+def find(u,P):
+    # find parent for u
+    while P[u] != u:
+        u = P[u]
+    return u
+
+# function Union
+def union(u, v, P):
+    root_u = find(u,P)
+    root_v = find(v,P)
+    if root_u != root_v:
+        P[root_v] = root_u
+
+
+def makeSet(u, P):
+    # init trees
+    P[u] = u
+
+def min_span_Tree(U, V):
+    T = []  # tree
+    wt = 0  # line weight
+    n = len(V)  # count of points
+    P = [-1]*(n+1)  # predecessors
+
+    for v in V:
+        makeSet(v, P)
+
+    # sort edges
+    ES = sorted(E, key=lambda it:it[2])
+
+    # process sorted edges
+    for e in ES:
+        u, v, w = e
+        
+        # relaxation of edge - union find
+        if find(u,P) != find(v,P):
+            union(u, V, P)
+            T.append(e)
+            wt = wt + w
+
+    return T, wt
+
+T,wt = min_span_Tree(V, E)
+print(T)
+
