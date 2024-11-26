@@ -77,9 +77,10 @@ def min_span_Tree(U, V):
     T = []  # tree
     wt = 0  # line weight
     n = len(V)  # count of points
-    P = [-1]*(n+1)  # predecessors
+    P = [-1]*(n+10)  # predecessors
 
     for v in V:
+        print(v)
         makeSet(v, P)
 
     # sort edges
@@ -97,6 +98,6 @@ def min_span_Tree(U, V):
 
     return T, wt
 
-T,wt = min_span_Tree(V, E)
+T,wt = min_span_Tree(E,V)
 print(T)
 
