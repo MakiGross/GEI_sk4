@@ -18,8 +18,8 @@ G = {
 def dijkstra(G, u, v):
     #input data structures
     n = len(G)
-    P = [-1]*(n+1) # predecessors
-    D = [inf]*(n+1) # weights
+    P = {v:-1 for v in G} # predecessors
+    D = {v:float('inf') for v in G} # weights
     Pq = PriorityQueue() 
 
     #Starting node:
@@ -50,10 +50,6 @@ def rec(u, v, G):
         v = P[v]
     path.append(v) 
 
-    if v != u:
-        print('path does not exist')
-    else: 
-        print('all good')
     return path
 
 start = 1
